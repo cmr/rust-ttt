@@ -2,33 +2,31 @@ use std::str;
 use std::vec::*;
 use std::io::*;
 
-use mock_io::*;
 use board::*;
+use mock_io::*;
 
 mod mock_io;
 mod board;
 
 struct ConsoleIO {
-    input: IReader,
-    output: @Writer,
+    input: IReader
 }
 
 impl ConsoleIO {
+
     pub fn new(reader: IReader) -> ConsoleIO {
-        ConsoleIO { input: reader,
-                    output: stdout()
-        }
+        ConsoleIO { input: reader }
     }
 
     pub fn get_move(&self) -> int {
         let input = self.input.read_line();
 
-        let (valid, move) = self.valid_input(input.clone());
+        let (valid_input, move) = self.valid_input(input.clone());
 
-        if valid {
+        if valid_input {
             move
         } else {
-            -1
+            self.get_move()
         }
     }
 
@@ -41,15 +39,13 @@ impl ConsoleIO {
         (input >= 0 && input < 9, input)
     }
 
-    fn non_empty(&self, s: ~str) -> bool { s.len() > 0 }
-
     pub fn printable_space(&self, index: int, token: char) -> ~str {
         let printable_token = " " + str::from_char(token) + " ";
 
         let grid_output =
-            if self.bottom_right_corner(index) {
+            if self.is_bottom_right_corner(index) {
                 ""
-            } else if self.right_edge(index) {
+            } else if self.is_right_edge(index) {
                 "\n---+---+---\n"
             } else {
                 "|"
@@ -70,11 +66,11 @@ impl ConsoleIO {
         self.flatten(spaces)
     }
 
-    fn right_edge(&self, index: int) -> bool {
+    fn is_right_edge(&self, index: int) -> bool {
         index % 3 == 2
     }
 
-    fn bottom_right_corner(&self, index: int) -> bool {
+    fn is_bottom_right_corner(&self, index: int) -> bool {
         index == 8
     }
 
@@ -108,17 +104,17 @@ mod io_test {
     #[test]
     fn can_print_to_console() {
         let io = create_io(~"");
-        let board = ::Board::new_from_spaces(~['x','o','.',
-                                               '.','.','.',
-                                               '.','.','x' ]);
+        let board = ::Board::new_from_spaces(~['x','o',' ',
+                                               ' ',' ',' ',
+                                               ' ',' ','x' ]);
 
         let board_output = io.printable_board(board);
 
-        assert!(board_output.contains(" x | o | . \n"));
+        assert!(board_output.contains(" x | o |   \n"));
         assert!(board_output.contains("---+---+---\n"));
-        assert!(board_output.contains(" . | . | . \n"));
+        assert!(board_output.contains("   |   |   \n"));
         assert!(board_output.contains("---+---+---\n"));
-        assert!(board_output.contains(" . | . | x "));
+        assert!(board_output.contains("   |   | x "));
     }
 
     #[test]

@@ -1,3 +1,4 @@
+
 pub enum IReader {
     MockReader(~str),
     RealReader(@Reader)
