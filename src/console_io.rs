@@ -1,70 +1,150 @@
 use std::str;
-use std::vec;
+use std::vec::*;
+use std::io::*;
 
+use mock_io::*;
 use board::*;
+
+mod mock_io;
 mod board;
 
-fn right_edge(index: int) -> bool {
-    index % 3 == 2
+struct ConsoleIO {
+    input: IReader,
+    output: @Writer,
 }
 
-fn bottom_right_corner(index: int) -> bool {
-    index == 8
-}
+impl ConsoleIO {
+    pub fn new(reader: IReader) -> ConsoleIO {
+        ConsoleIO { input: reader,
+                    output: stdout()
+        }
+    }
 
-pub fn printable_space(index: int, token: char) -> ~str {
-    let printable_token = ~" " + str::from_char(token) + ~" ";
+    pub fn get_move(&self) -> int {
+        let input = self.input.read_line();
 
-    let grid_output =
-        if bottom_right_corner(index) {
-            ""
-        } else if right_edge(index) {
-            "\n---+---+---\n"
+        let (valid, move) = self.valid_input(input.clone());
+
+        if valid {
+            move
         } else {
-            "|"
+            -1
+        }
+    }
+
+    fn valid_input(&self, s: ~str) -> (bool, int) {
+        let input = match from_str::<int>(s.trim()) {
+            Some(x) => x,
+            None    => -1
         };
 
-    printable_token + grid_output
-}
+        (input >= 0 && input < 9, input)
+    }
 
-pub fn printable_board(board: Board) -> ~str {
+    fn non_empty(&self, s: ~str) -> bool { s.len() > 0 }
 
-    let spaces = do vec::flat_map(board.spaces) |&space| {
-        ~[printable_space(0, space)]
-    };
+    pub fn printable_space(&self, index: int, token: char) -> ~str {
+        let printable_token = " " + str::from_char(token) + " ";
 
-    vec::concat(spaces)
+        let grid_output =
+            if self.bottom_right_corner(index) {
+                ""
+            } else if self.right_edge(index) {
+                "\n---+---+---\n"
+            } else {
+                "|"
+            };
 
+        printable_token + grid_output
+    }
+
+
+    pub fn printable_board(&self, board: Board) -> ~str {
+
+        let mut i = -1;
+        let spaces = do flat_map(board.spaces) |&space| {
+            i += 1;
+            ~[self.printable_space(i, space)]
+        };
+
+        self.flatten(spaces)
+    }
+
+    fn right_edge(&self, index: int) -> bool {
+        index % 3 == 2
+    }
+
+    fn bottom_right_corner(&self, index: int) -> bool {
+        index == 8
+    }
+
+    fn flatten(&self, arr: &[~str]) -> ~str {
+        let board_size = arr.len();
+        let mut ans = ~"";
+
+        for i in range(0, board_size) {
+            ans = ans + arr[i];
+        };
+
+        ans
+    }
 }
 
 #[cfg(test)]
-mod test {
+mod io_test {
+    use mock_io::*;
 
     #[test]
     fn knows_how_to_print_individual_spaces() {
-        assert_eq!(~" x |", ::printable_space(0, 'x'));
-        assert_eq!(~" o |", ::printable_space(1, 'o'));
-        assert_eq!(~" x \n---+---+---\n", ::printable_space(2, 'x'));
-        assert_eq!(~" o \n---+---+---\n", ::printable_space(5, 'o'));
-        assert_eq!(~" o ", ::printable_space(8, 'o'));
+        let io = create_io(~"");
+
+        assert_eq!(~" x |",               io.printable_space(0, 'x'));
+        assert_eq!(~" o |",               io.printable_space(1, 'o'));
+        assert_eq!(~" x \n---+---+---\n", io.printable_space(2, 'x'));
+        assert_eq!(~" o \n---+---+---\n", io.printable_space(5, 'o'));
+        assert_eq!(~" o ",                io.printable_space(8, 'o'));
     }
 
     #[test]
     fn can_print_to_console() {
+        let io = create_io(~"");
         let board = ::Board::new_from_spaces(~['x','o','.',
                                                '.','.','.',
-                                               '.','.','.',]);
+                                               '.','.','x' ]);
 
-        let expected_board_output = ~"\
-              x | o | . \
-             ---+---+---\
-              . | . | . \
-             ---+---+---\
-              . | . | . ";
+        let board_output = io.printable_board(board);
 
-        ::printable_board(board);
+        assert!(board_output.contains(" x | o | . \n"));
+        assert!(board_output.contains("---+---+---\n"));
+        assert!(board_output.contains(" . | . | . \n"));
+        assert!(board_output.contains("---+---+---\n"));
+        assert!(board_output.contains(" . | . | x "));
+    }
 
-        assert!(true);
-        //assert_eq!(expected_board_output, ::printable_board(board));
+    #[test]
+    fn gets_input_from_user() {
+        let io = create_io(~"3\n");
+
+        assert_eq!(3, io.get_move());
+    }
+
+    #[test]
+    fn validates_input() {
+        let io = create_io(~"");
+
+        assert_eq!( (true, 0), io.valid_input(~"0\n") );
+        assert_eq!( (true, 1), io.valid_input(~"1\n") );
+        assert_eq!( (true, 8), io.valid_input(~"8\n") );
+
+        assert_eq!( (false, -1), io.valid_input(~"hi\n") );
+        assert_eq!( (false, -1), io.valid_input(~"\n") );
+        assert_eq!( (false, 9), io.valid_input(~"9\n") );
+        assert_eq!( (false, 20), io.valid_input(~"20\n") );
+    }
+
+    fn create_io(fake_input: ~str) -> ::ConsoleIO {
+        let fake_reader = MockReader(fake_input);
+        ::ConsoleIO::new(fake_reader)
     }
 }
+
