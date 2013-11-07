@@ -10,21 +10,21 @@ mod mock_io;
 mod console_io;
 
 fn main() {
-    clear_screen();
-
     let mut board = ::Board::new();
     let reader = RealReader(io::stdin());
     let io = ::ConsoleIO::new(reader);
 
+    loop {
+        clear_screen();
+        print_board();
+
+        let move = io.get_move();
+        board = board.place(board.current_token(), move);
+    }
+}
+
+fn print_board(board: Board) {
     println(io.printable_board(board.clone()));
-
-    let move = io.get_move();
-
-    board = board.place('x', move);
-
-    clear_screen();
-
-    println(io.printable_board(board));
 }
 
 fn clear_screen() {

@@ -9,29 +9,29 @@ mod mock_io;
 mod board;
 
 struct ConsoleIO {
-    input: IReader
+    reader: IReader
 }
 
 impl ConsoleIO {
 
-    pub fn new(reader: IReader) -> ConsoleIO {
-        ConsoleIO { input: reader }
+    pub fn new(input: IReader) -> ConsoleIO {
+        ConsoleIO { reader: input }
     }
 
     pub fn get_move(&self) -> int {
-        let input = self.input.read_line();
+        let input = self.reader.read_line();
 
-        let (valid_input, move) = self.valid_input(input.clone());
+        let (is_valid_input, move) = self.check_valid_input(input.clone());
 
-        if valid_input {
+        if is_valid_input {
             move
         } else {
             self.get_move()
         }
     }
 
-    fn valid_input(&self, s: ~str) -> (bool, int) {
-        let input = match from_str::<int>(s.trim()) {
+    fn check_valid_input(&self, line: ~str) -> (bool, int) {
+        let input = match from_str::<int>(line.trim()) {
             Some(x) => x,
             None    => -1
         };
@@ -39,7 +39,7 @@ impl ConsoleIO {
         (input >= 0 && input < 9, input)
     }
 
-    pub fn printable_space(&self, index: int, token: char) -> ~str {
+    fn printable_space(&self, index: int, token: char) -> ~str {
         let printable_token = " " + str::from_char(token) + " ";
 
         let grid_output =
@@ -128,14 +128,16 @@ mod io_test {
     fn validates_input() {
         let io = create_io(~"");
 
-        assert_eq!( (true, 0), io.valid_input(~"0\n") );
-        assert_eq!( (true, 1), io.valid_input(~"1\n") );
-        assert_eq!( (true, 8), io.valid_input(~"8\n") );
+        assert_eq!( (true, 0), io.check_valid_input(~"0\n") );
+        assert_eq!( (true, 1), io.check_valid_input(~"1\n") );
+        assert_eq!( (true, 8), io.check_valid_input(~"8\n") );
 
-        assert_eq!( (false, -1), io.valid_input(~"hi\n") );
-        assert_eq!( (false, -1), io.valid_input(~"\n") );
-        assert_eq!( (false, 9), io.valid_input(~"9\n") );
-        assert_eq!( (false, 20), io.valid_input(~"20\n") );
+        assert_eq!( (false, -1), io.check_valid_input(~"hi\n") );
+        assert_eq!( (false, -1), io.check_valid_input(~"\n") );
+        assert_eq!( (false, 9),  io.check_valid_input(~"9\n") );
+        assert_eq!( (false, 9),  io.check_valid_input(~"09\n") );
+        assert_eq!( (false, -9), io.check_valid_input(~"-9\n") );
+        assert_eq!( (false, 20), io.check_valid_input(~"20\n") );
     }
 
     fn create_io(fake_input: ~str) -> ::ConsoleIO {
