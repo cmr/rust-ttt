@@ -1,4 +1,5 @@
 use std::iter::Repeat;
+use std::num::sqrt;
 
 #[deriving(Clone, Eq)]
 struct Board {
@@ -18,7 +19,10 @@ impl Board {
 
     pub fn place(&self, token: char, index: int) -> Board {
         let mut new_spaces = self.spaces.clone();
-        new_spaces[index] = token;
+
+        if new_spaces[index] == ' ' {
+            new_spaces[index] = token;
+        }
 
         Board { spaces: new_spaces }
     }
@@ -42,7 +46,7 @@ impl Board {
         let orig_spaces = self.spaces.clone();
         let mut new_spaces = ~[];
         let mut i: uint = 0;
-        let dim = 3;
+        let dim = self.dimension();
         let size = dim * dim;
 
         do (size - 1).times {
@@ -55,50 +59,45 @@ impl Board {
         Board { spaces: new_spaces }
     }
 
-    fn is_winning(&self, row: &[char]) -> bool {
-        let mut owned_row = row.to_owned();
-        let first_token = owned_row.shift();
-
-        if !(first_token == ' ') {
-            owned_row.retain(|x: &char| *x == first_token);
-            let tokens_in_row = owned_row.len() + 1;
-
-            match tokens_in_row {
-                3 => return true,
-                _ => ()
-            }
-        }
-
-        return false;
+    fn is_winning(&self, line: &[char]) -> bool {
+        self.is_all_same_token(line.to_owned())
     }
 
     fn dimension(&self) -> uint {
         let size = self.spaces.len() as float;
-        std::num::sqrt(size) as uint
+        sqrt(size) as uint
     }
 
     fn has_backslash_diagonal_winner(&self) -> bool{
         let mut i = 0;
         let dim = self.dimension();
         let mut diagonal_tokens: ~[char] = ~[];
+
         do dim.times {
             diagonal_tokens.push(self.spaces[(dim + 1) * i]);
             i += 1;
         }
 
-        diagonal_tokens[0] == diagonal_tokens[1] && diagonal_tokens[0] == diagonal_tokens[2]
+        self.is_all_same_token(diagonal_tokens)
     }
 
     fn has_slash_diagonal_winner(&self) -> bool{
         let mut i = 1;
         let dim = self.dimension();
         let mut diagonal_tokens: ~[char] = ~[];
+
         do dim.times {
             diagonal_tokens.push(self.spaces[(dim - 1) * i]);
             i += 1;
         }
 
-        diagonal_tokens[0] == diagonal_tokens[1] && diagonal_tokens[0] == diagonal_tokens[2]
+        self.is_all_same_token(diagonal_tokens)
+    }
+
+    fn is_all_same_token(&self, tokens: ~[char]) -> bool {
+        let first_token = tokens[0];
+
+        tokens.iter().all( |x: &char| *x == first_token) && first_token != ' '
     }
 
     fn winner(&self) -> Option<char> {
@@ -107,13 +106,13 @@ impl Board {
         let mut columns = transposed.spaces.chunk_iter(3);
 
         for row in rows {
-            if self.is_winning(row) && row[0] != ' ' {
+            if self.is_winning(row) {
                 return Some(row[0]);
             }
         }
 
         for column in columns {
-            if self.is_winning(column) && column[0] != ' ' {
+            if self.is_winning(column) {
                 return Some(column[0]);
             }
         }
@@ -130,8 +129,16 @@ impl Board {
         None
     }
 
-    fn is_game_over(&self) -> bool {
-        !(self.winner() == None) || self.empty_spaces() == 0
+    fn somebody_won(&self) -> bool {
+        !(self.winner() == None)
+    }
+
+    fn board_is_full(&self) -> bool {
+        self.empty_spaces() == 0
+    }
+
+    pub fn is_game_over(&self) -> bool {
+        self.somebody_won() || self.board_is_full()
     }
 }
 
@@ -174,6 +181,17 @@ mod test {
         assert_eq!('x', board.spaces[0]);
         assert_eq!('o', board.spaces[1]);
         assert_eq!(' ', board.spaces[2]);
+    }
+
+    #[test]
+    fn can_only_place_a_token_in_an_empty_space() {
+        let mut board = ::Board::new();
+
+        board = board.place('x', 0);
+        board = board.place('o', 0);
+
+        assert_eq!('x', board.spaces[0]);
+        assert_eq!('o', board.current_token());
     }
 
     #[test]

@@ -16,15 +16,16 @@ fn main() {
 
     loop {
         clear_screen();
-        print_board();
+        println(io.printable_board(board.clone()));
 
         let move = io.get_move();
-        board = board.place(board.current_token(), move);
+        let b = board.clone();
+        board = b.place(b.current_token(), move);
+        if board.is_game_over() {
+            println(io.printable_board(board.clone()));
+            break
+        }
     }
-}
-
-fn print_board(board: Board) {
-    println(io.printable_board(board.clone()));
 }
 
 fn clear_screen() {

@@ -54,7 +54,6 @@ impl ConsoleIO {
         printable_token + grid_output
     }
 
-
     pub fn printable_board(&self, board: Board) -> ~str {
 
         let mut i = -1;
