@@ -100,7 +100,7 @@ impl Board {
         tokens.iter().all( |x: &char| *x == first_token) && first_token != ' '
     }
 
-    fn winner(&self) -> Option<char> {
+    pub fn winner(&self) -> Option<char> {
         let mut rows = self.spaces.chunk_iter(3);
         let transposed = self.transpose();
         let mut columns = transposed.spaces.chunk_iter(3);
@@ -139,6 +139,22 @@ impl Board {
 
     pub fn is_game_over(&self) -> bool {
         self.somebody_won() || self.board_is_full()
+    }
+
+    pub fn available_spaces(&self) -> ~[int] {
+        let mut available_spaces: ~[int] = ~[];
+        let mut i = 0;
+        let size = self.spaces.len();
+
+        do size.times {
+            if self.spaces[i] == ' ' {
+                available_spaces.push(i);
+            }
+
+            i += 1;
+        }
+
+        available_spaces
     }
 }
 
@@ -330,6 +346,20 @@ mod test {
                                                            'x','o','x' ])];
 
         for board in game_over_boards.iter() { assert!(!board.is_game_over()) }
+    }
+
+    #[test]
+    fn knows_the_available_spaces() {
+        let empty_board = ::Board::new_from_spaces(~[' ',' ',' ',
+                                                     ' ',' ',' ',
+                                                     ' ',' ',' ' ]);
+
+        let board = ::Board::new_from_spaces(~['x','o',' ',
+                                               ' ','x',' ',
+                                               ' ','o',' ' ]);
+
+        assert_eq!(~[0,1,2,3,4,5,6,7,8], empty_board.available_spaces());
+        assert_eq!(~[2,3,5,6,8], board.available_spaces());
     }
 }
 

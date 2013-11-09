@@ -16,21 +16,27 @@ fn main() {
 
     loop {
         clear_screen();
+
         println(io.printable_board(board.clone()));
 
-        let move = io.get_move();
+        let move = io.get_move(board.available_spaces());
         let b = board.clone();
+
         board = b.place(b.current_token(), move);
+
         if board.is_game_over() {
+            clear_screen();
             println(io.printable_board(board.clone()));
+            match board.winner() {
+                Some(winner) => println("\n\nWinner: " + winner.to_str()),
+                None         => println("\n\nTie game!")
+            }
             break
         }
     }
 }
 
 fn clear_screen() {
-    do 1000.times {
-        println("");
-    }
+    println("\x1b[2J\x1b[H");
 }
 
