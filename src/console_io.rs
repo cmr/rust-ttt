@@ -12,6 +12,12 @@ struct ConsoleIO {
     reader: IReader
 }
 
+#[deriving(Eq)]
+pub struct ParsedInput {
+    move: int,
+    error_message: Option<~str>
+}
+
 impl ConsoleIO {
 
     pub fn new(input: IReader) -> ConsoleIO {
@@ -20,17 +26,16 @@ impl ConsoleIO {
 
     pub fn get_move(&self, available_spaces: ~[int]) -> int {
         let input = self.reader.read_line();
+        let parsed_input = self.check_valid_input(input.clone(), available_spaces.clone());
 
-        let (move, error_message) = self.check_valid_input(input.clone(), available_spaces.clone());
-
-        if error_message == None {
-            move
+        if parsed_input.error_message == None {
+            parsed_input.move
         } else {
             self.get_move(available_spaces)
         }
     }
 
-    fn check_valid_input(&self, line: ~str, available_spaces: ~[int]) -> (int, Option<~str>) {
+    fn check_valid_input(&self, line: ~str, available_spaces: ~[int]) -> ParsedInput {
         let input = match from_str::<int>(line.trim()) {
                         Some(x) => x,
                         None    => -1
@@ -38,15 +43,16 @@ impl ConsoleIO {
 
         match input {
             0..8 => self.check_against_available_spaces(input, available_spaces),
-            _    => (-1, Some(~"Please enter a number between 0 and 8."))
+            _    => ParsedInput { move: -1,
+                                  error_message: Some(~"Please enter a number between 0 and 8.") }
         }
     }
 
-    fn check_against_available_spaces(&self, input: int, available_spaces: ~[int]) -> (int, Option<~str>) {
+    fn check_against_available_spaces(&self, input: int, available_spaces: ~[int]) -> ParsedInput {
         if available_spaces.contains(&input) {
-            (input, None)
+            ParsedInput { move: input, error_message: None }
         } else {
-            (-1, Some(~"That space is already taken."))
+            ParsedInput { move: -1, error_message: Some(~"That space is already taken.") }
         }
     }
 
@@ -133,9 +139,9 @@ mod io_test {
     #[test]
     #[ignore]
     fn gets_input_from_user() {
-        let io = create_io_with_fake_input(~"3\n");
+        let io = create_io_with_fake_input(~"1\n2\n3\n4\n");
 
-        assert_eq!(3, io.get_move(~[]));
+        assert_eq!(3, io.get_move(~[3]));
     }
 
     #[test]
@@ -143,16 +149,16 @@ mod io_test {
         assert!(correct_error_message(~"hi", ~"Please enter a number between 0 and 8."));
         //assert!(correct_error_message(~"0", ~"That space is already taken."));
 
-        assert!(valid_input(~"0\n", 0));
-        assert!(valid_input(~"1\n", 1));
-        assert!(valid_input(~"8\n", 8));
+        assert!(is_valid_input(~"0\n", 0));
+        assert!(is_valid_input(~"1\n", 1));
+        assert!(is_valid_input(~"8\n", 8));
 
-        assert!(invalid_input(~"\n"));
-        assert!(invalid_input(~"9\n"));
-        assert!(invalid_input(~"09\n"));
-        assert!(invalid_input(~"20\n"));
-        assert!(invalid_input(~"-9\n"));
-        assert!(invalid_input(~"yo\n"));
+        assert!(is_invalid_input(~"\n"));
+        assert!(is_invalid_input(~"9\n"));
+        assert!(is_invalid_input(~"09\n"));
+        assert!(is_invalid_input(~"20\n"));
+        assert!(is_invalid_input(~"-9\n"));
+        assert!(is_invalid_input(~"yo\n"));
     }
 
     #[test]
@@ -160,33 +166,35 @@ mod io_test {
         let io = create_io_with_fake_input(~"");
         let available_spaces = ~[];
 
-        let (move, error_message) = io.check_valid_input(~"0\n", available_spaces);
+        let parsed_input = io.check_valid_input(~"0\n", available_spaces);
 
-        assert_eq!(-1, move);
-        assert_eq!(Some(~"That space is already taken."), error_message);
+        assert_eq!(-1, parsed_input.move);
+        assert_eq!(Some(~"That space is already taken."), parsed_input.error_message);
     }
 
     fn correct_error_message(input: ~str, expected_error_message: ~str) -> bool {
         let (io, available_spaces) = setup_io();
-        let (_, error_message) = io.check_valid_input(input, available_spaces);
+        let parsed_input = io.check_valid_input(input, available_spaces);
 
-        match error_message {
+        match parsed_input.error_message {
             Some(error) => error == expected_error_message,
             None        => false
         }
     }
 
-    fn invalid_input(input: ~str) -> bool {
+    fn is_invalid_input(input: ~str) -> bool {
         let (io, available_spaces) = setup_io();
-        let error_message = Some(~"Please enter a number between 0 and 8.");
+        let expected_parsed_input = ::ParsedInput { move: -1,
+                                                    error_message: Some(~"Please enter a number between 0 and 8.") };
 
-        (-1, error_message) == io.check_valid_input(input, available_spaces)
+        expected_parsed_input == io.check_valid_input(input, available_spaces)
     }
 
-    fn valid_input(input: ~str, move: int) -> bool {
+    fn is_valid_input(input: ~str, move: int) -> bool {
         let (io, available_spaces) = setup_io();
+        let parsed_input = ::ParsedInput { move: move, error_message: None };
 
-        (move, None) == io.check_valid_input(input, available_spaces)
+        parsed_input == io.check_valid_input(input, available_spaces)
     }
 
     fn setup_io() -> (::ConsoleIO, ~[int]) {

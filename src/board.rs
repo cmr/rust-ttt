@@ -3,28 +3,59 @@ use std::num::sqrt;
 
 #[deriving(Clone, Eq)]
 struct Board {
-    spaces: ~[char]
+    spaces: ~[char],
+    error_message: Option<~str>
 }
 
 impl Board {
     pub fn new() -> Board {
         let empty_spaces: ~[char] = Repeat::new(' ').take(9).collect::<~[char]>();
 
-        Board { spaces: empty_spaces }
+        Board { spaces: empty_spaces,
+                error_message: None }
     }
 
     pub fn new_from_spaces(spaces: ~[char]) -> Board {
-        Board { spaces: spaces }
+        Board { spaces: spaces,
+                error_message: None }
     }
 
-    pub fn place(&self, token: char, index: int) -> Board {
+    pub fn place(&self, index: int) -> Board {
         let mut new_spaces = self.spaces.clone();
 
         if new_spaces[index] == ' ' {
-            new_spaces[index] = token;
+            new_spaces[index] = self.current_token();
         }
 
-        Board { spaces: new_spaces }
+        Board { spaces: new_spaces,
+                error_message: None }
+    }
+
+    fn try_move(&self, index: int) -> Board {
+        let error_message = self.get_error_message(index);
+
+        match error_message {
+            Some(*) => Board { spaces: self.spaces.clone(),
+                               error_message: error_message },
+            None => Board { spaces: self.place(index).spaces,
+                            error_message: error_message }
+        }
+
+    }
+
+    fn get_error_message(&self, index: int) -> Option<~str> {
+        match index {
+            0..8 => self.check_against_available_moves(index),
+            _    => Some(~"Please choose a number from 0 to 8.")
+        }
+    }
+
+    fn check_against_available_moves(&self, index: int) -> Option<~str> {
+        if self.available_spaces().contains(@index) {
+            None
+        } else {
+            Some(~"That space is already taken.")
+        }
     }
 
     fn empty_spaces(&self) -> uint {
@@ -56,7 +87,8 @@ impl Board {
 
         new_spaces.push(orig_spaces[8]);
 
-        Board { spaces: new_spaces }
+        Board { spaces: new_spaces,
+                error_message: None }
     }
 
     fn is_winning(&self, line: &[char]) -> bool {
@@ -191,8 +223,8 @@ mod test {
     fn can_place_a_token() {
         let mut board = ::Board::new();
 
-        board = board.place('x', 0);
-        board = board.place('o', 1);
+        board = board.place(0);
+        board = board.place(1);
 
         assert_eq!('x', board.spaces[0]);
         assert_eq!('o', board.spaces[1]);
@@ -203,8 +235,8 @@ mod test {
     fn can_only_place_a_token_in_an_empty_space() {
         let mut board = ::Board::new();
 
-        board = board.place('x', 0);
-        board = board.place('o', 0);
+        board = board.place(0);
+        board = board.place(0);
 
         assert_eq!('x', board.spaces[0]);
         assert_eq!('o', board.current_token());
@@ -215,7 +247,7 @@ mod test {
         let mut board = ::Board::new();
         assert_eq!('x', board.current_token());
 
-        board = board.place('x', 0);
+        board = board.place(0);
         assert_eq!('o', board.current_token());
     }
 
@@ -299,9 +331,7 @@ mod test {
 
     #[test]
     fn knows_when_nobody_wins() {
-        let unfinished_boards = [::Board::new_from_spaces(~[' ',' ',' ',
-                                                            ' ',' ',' ',
-                                                            ' ',' ',' ' ]),
+        let unfinished_boards = [::Board::new(),
 
                                  ::Board::new_from_spaces(~['o',' ',' ',
                                                             'o','x',' ',
@@ -333,9 +363,7 @@ mod test {
 
     #[test]
     fn knows_when_the_game_is_not_over() {
-        let game_over_boards = [::Board::new_from_spaces(~[' ',' ',' ',
-                                                           ' ',' ',' ',
-                                                           ' ',' ',' ' ]),
+        let game_over_boards = [::Board::new(),
 
                                 ::Board::new_from_spaces(~['o',' ',' ',
                                                            'o','x',' ',
@@ -350,9 +378,7 @@ mod test {
 
     #[test]
     fn knows_the_available_spaces() {
-        let empty_board = ::Board::new_from_spaces(~[' ',' ',' ',
-                                                     ' ',' ',' ',
-                                                     ' ',' ',' ' ]);
+        let empty_board = ::Board::new();
 
         let board = ::Board::new_from_spaces(~['x','o',' ',
                                                ' ','x',' ',
@@ -360,6 +386,37 @@ mod test {
 
         assert_eq!(~[0,1,2,3,4,5,6,7,8], empty_board.available_spaces());
         assert_eq!(~[2,3,5,6,8], board.available_spaces());
+    }
+
+    #[test]
+    fn starts_with_no_error_message() {
+        let board = ::Board::new();
+
+        assert_eq!(None, board.error_message);
+    }
+
+    #[test]
+    fn sets_an_error_message_for_invalid_moves() {
+        let board = ::Board::new_from_spaces(~['x','o',' ',
+                                               ' ','x',' ',
+                                               ' ','o',' ' ]);
+
+        let space_already_taken_board = board.try_move(0);
+        let invalid_space_board = board.try_move(1000);
+
+        assert_eq!(Some(~"That space is already taken."), space_already_taken_board.error_message);
+        assert_eq!(Some(~"Please choose a number from 0 to 8."), invalid_space_board.error_message);
+    }
+
+    #[test]
+    fn try_move_can_place_a_valid_token() {
+        let mut board = ::Board::new_from_spaces(~[' ','x',' ',
+                                                   ' ','x',' ',
+                                                   ' ','o',' ' ]);
+
+        let board = board.try_move(0);
+
+        assert_eq!('o', board.spaces[0]);
     }
 }
 
