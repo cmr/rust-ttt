@@ -1,18 +1,26 @@
 
+pub struct MockReaderInfo {
+    str_in_stdin: ~str,
+    read_line_call_count: int
+}
+
 pub enum IReader {
-    MockReader { str_in_stdin: ~str, read_line_call_count: int },
+    MockReader(@MockReaderInfo),
     RealReader(@Reader)
+}
+
+pub enum IWriter {
+    MockWriter(~[~str]),
+    RealWriter(@Writer)
 }
 
 impl IReader {
     pub fn read_line(&self) -> ~str {
         match *self {
-            MockReader { str_in_stdin: ref fake_input,
-                         read_line_call_count: ref call_count } =>
-                self.fake_read_line(fake_input.clone(), *call_count),
+            MockReader(mock_info) => self.fake_read_line(mock_info.str_in_stdin.clone(),
+                                                         mock_info.read_line_call_count.clone()),
 
-            RealReader(r) =>
-                r.read_line()
+            RealReader(r)         => r.read_line()
         }
     }
 

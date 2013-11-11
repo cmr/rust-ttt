@@ -22,7 +22,7 @@ fn main() {
         let move = io.get_move(board.available_spaces());
         let b = board.clone();
 
-        board = b.place(b.current_token(), move);
+        board = b.place(move);
 
         if board.is_game_over() {
             clear_screen();
@@ -37,6 +37,7 @@ fn main() {
 }
 
 fn clear_screen() {
+    // only works on vt100 terminal emulators
     println("\x1b[2J\x1b[H");
 }
 
