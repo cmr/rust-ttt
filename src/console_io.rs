@@ -9,8 +9,7 @@ mod mock_io;
 mod board;
 
 struct ConsoleIO {
-    reader: IReader,
-    writer: IWriter
+    reader: IReader
 }
 
 #[deriving(Eq)]
@@ -21,9 +20,8 @@ pub struct ParsedInput {
 
 impl ConsoleIO {
 
-    pub fn new(input: IReader, output: IWriter) -> ConsoleIO {
-        ConsoleIO { reader: input,
-                    writer: output }
+    pub fn new(input: IReader) -> ConsoleIO {
+        ConsoleIO { reader: input }
     }
 
     pub fn get_move(&self) -> Option<int> {
@@ -32,19 +30,28 @@ impl ConsoleIO {
         from_str::<int>(input.trim())
     }
 
+    pub fn print_board(&self, board: Board) {
+        self.clear_screen();
+        println(self.printable_board(board));
+    }
+
+    fn clear_screen(&self) {
+        // only works on vt100 terminal emulators
+        println("\x1b[2J\x1b[H");
+    }
+
     fn printable_space(&self, index: int, token: char) -> ~str {
         let printable_token = " " + str::from_char(token) + " ";
 
         let grid_output =
             if self.is_bottom_right_corner(index) { "" }
-            else if self.is_right_edge(index) { "\n---+---+---\n" }
-            else { "|" };
+            else if self.is_right_edge(index)     { "\n---+---+---\n" }
+            else                                  { "|" };
 
         printable_token + grid_output
     }
 
     pub fn printable_board(&self, board: Board) -> ~str {
-
         let mut i = -1;
         let spaces = do flat_map(board.spaces) |&space| {
             i += 1;
@@ -79,6 +86,10 @@ impl ConsoleIO {
 
         ans
     }
+
+    pub fn clone(&self) -> ConsoleIO {
+        ConsoleIO::new(self.reader.clone())
+    }
 }
 
 #[cfg(test)]
@@ -88,13 +99,8 @@ mod test__io {
     use mock_io::*;
 
     fn create_io_with_mocks(fake_input: ~str) -> ConsoleIO {
-        let mock_reader_info = MockReaderInfo { str_in_stdin: fake_input,
-                                                read_line_call_count: 0 };
-
-        let fake_reader = MockReader(@mock_reader_info);
-        let fake_writer = MockWriter(~[]);
-
-        ConsoleIO::new(fake_reader, fake_writer)
+        let fake_reader = MockReader { str_in_stdin: fake_input };
+        ConsoleIO::new(fake_reader)
     }
 
     #[test]
@@ -144,8 +150,8 @@ mod test__io {
     fn prints_error_message_with_board() {
         let io = create_io_with_mocks(~"");
         let mut board = Board::new_from_spaces(~['x','o',' ',
-                                             ' ',' ',' ',
-                                             ' ',' ','x' ]);
+                                                 ' ',' ',' ',
+                                                 ' ',' ','x' ]);
 
         board = board.try_move(0);
 

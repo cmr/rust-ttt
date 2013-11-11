@@ -5,37 +5,30 @@ mod board;
 mod mock_io;
 mod console_io;
 
+#[deriving(Clone)]
 struct Game {
     io: ConsoleIO,
     board: Board
 }
 
 impl Game {
-    fn new(io: ConsoleIO, board: Board) -> Game {
+    pub fn new(io: ConsoleIO, board: Board) -> Game {
         Game { io: io,
                board: board }
     }
 
-    fn start(&self) {
-        loop {
-            //self.io.draw_board(self.board);
+    pub fn next_turn(&self) -> Game {
+        let mut new_board = Board::new_from_spaces(self.board.spaces.clone());
 
-//            let move = self.io.get_move();
-//
-//            match move {
-//                Some(index) => self.board = self.board.try_move(index),
-//                None        => println("oops")
-//            }
-        }
-    }
-
-    fn single_turn(&self) {
         let move = self.io.get_move();
 
         match move {
-            Some(index) => (),
+            Some(index) => new_board = self.board.try_move(index),
             None        => ()
         }
+
+        Game { io: self.io.clone(),
+               board: new_board }
     }
 }
 
@@ -47,20 +40,18 @@ mod test__game {
     use console_io::*;
 
     #[test]
-    fn draws_the_board() {
+    fn can_play_a_single_turn() {
         let mut board = Board::new();
-        let mock_reader_info = MockReaderInfo { str_in_stdin: ~"",
-                                                read_line_call_count: 0 };
 
-        let fake_reader = MockReader(@mock_reader_info);
-        let fake_writer = MockWriter(~[]);
+        let fake_reader = MockReader { str_in_stdin: ~"0" };
 
-        let mock_io = ConsoleIO::new(fake_reader, fake_writer);
+        let mock_io = ConsoleIO::new(fake_reader);
         let mut game = Game::new(mock_io, board);
 
-        game.start();
+        game = game.next_turn();
 
-        assert!(true);
+
+        assert_eq!('x', game.board.spaces[0]);
     }
 }
 

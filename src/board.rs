@@ -32,17 +32,17 @@ impl Board {
     }
 
     pub fn try_move(&self, index: int) -> Board {
-        let flash_message = self.get_flash_message(index);
+        let error_message = self.get_error_message(index);
 
-        match flash_message {
+        match error_message {
             Some(*) => Board { spaces: self.spaces.clone(),
-                               flash_message: flash_message },
-            None => Board { spaces: self.place(index).spaces,
-                            flash_message: flash_message }
+                               flash_message: error_message },
+
+            None => self.check_game_over(index)
         }
     }
 
-    fn get_flash_message(&self, index: int) -> Option<~str> {
+    fn get_error_message(&self, index: int) -> Option<~str> {
         match index {
             0..8 => self.check_against_available_moves(index),
             _    => Some(~"Please choose a number from 0 to 8.")
@@ -51,19 +51,22 @@ impl Board {
 
     fn check_against_available_moves(&self, index: int) -> Option<~str> {
         if self.available_spaces().contains(@index) {
-            self.check_game_over(index)
+            None
         } else {
             Some(~"That space is already taken.")
         }
     }
 
-    fn check_game_over(&self, index: int) -> Option<~str> {
+    fn check_game_over(&self, index: int) -> Board {
         let new_board = self.place(index);
 
-        match new_board.winner() {
+        let flash_message = match new_board.winner() {
             Some(winner) => Some(winner.to_str() + " wins!"),
             None         => new_board.check_tie_game()
-        }
+        };
+
+        Board { spaces: new_board.spaces,
+                flash_message: flash_message }
     }
 
     fn check_tie_game(&self) -> Option<~str> {
