@@ -53,16 +53,17 @@ mod test__player {
     fn human_player_gets_move_from_console_input() {
         let player = create_human_player_with_mock_input(~"5\n");
         let player_with_invalid_input = create_human_player_with_mock_input(~"claws");
-        let board = Board::new();
 
-        assert_eq!(Some(5), player.get_move(board.spaces.clone()));
-        assert_eq!(None, player_with_invalid_input.get_move(board.spaces.clone()));
+        let spaces = Board::new().spaces;
+
+        assert_eq!(Some(5), player.get_move(spaces.clone()));
+        assert_eq!(None, player_with_invalid_input.get_move(spaces.clone()));
     }
 
     #[test]
     fn computer_player_gets_move_from_minimax() {
-        let minimax = AI::new(LowestAvailable);
-        let player = Player::new_computer(minimax);
+        let dumb_ai = AI::new(LowestAvailable);
+        let player = Player::new_computer(dumb_ai);
         let board = Board::new();
 
         assert_eq!(Some(0), player.get_move(board.spaces.clone()));
