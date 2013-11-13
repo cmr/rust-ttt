@@ -1,12 +1,8 @@
-use std::str;
 use std::vec::*;
 use std::io::*;
 
-use board::*;
 use console_reader::*;
-
 mod console_reader;
-mod board;
 
 struct ConsoleInput {
     reader: ConsoleReader
@@ -18,7 +14,7 @@ impl ConsoleInput {
         ConsoleInput { reader: input }
     }
 
-    pub fn get_move(&self) -> Option<int> {
+    pub fn get_int(&self) -> Option<int> {
         let input = self.reader.read_line();
 
         from_str::<int>(input.trim())
@@ -32,7 +28,6 @@ impl ConsoleInput {
 #[cfg(test)]
 mod test__input {
     use super::*;
-    use board::*;
     use console_reader::*;
 
     fn create_io_with_mocks(fake_input: ~str) -> ConsoleInput {
@@ -45,8 +40,8 @@ mod test__input {
         let io = create_io_with_mocks(~"  1  \n");
         let io_with_invalid_input = create_io_with_mocks(~"wazzup\n");
 
-        assert_eq!(Some(1), io.get_move());
-        assert_eq!(None, io_with_invalid_input.get_move());
+        assert_eq!(Some(1), io.get_int());
+        assert_eq!(None, io_with_invalid_input.get_int());
     }
 }
 

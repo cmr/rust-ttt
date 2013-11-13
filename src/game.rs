@@ -1,8 +1,5 @@
 use board::*;
-use console_input::*;
 use console_output::*;
-use console_reader::*;
-use console_writer::*;
 use player::*;
 
 mod board;
@@ -35,7 +32,11 @@ impl Game {
 
         let mut new_board = Board::new_from_spaces(self.board.spaces.clone());
 
-        let move = self.player1.get_move();
+        let move = if self.board.current_token() == 'x' {
+            self.player1.get_move()
+        } else {
+            self.player2.get_move()
+        };
 
         match move {
             Some(index) => new_board = self.board.try_move(index),
@@ -56,23 +57,33 @@ mod test__game {
     use console_input::*;
     use console_output::*;
 
-    #[test]
-    fn can_play_a_single_turn() {
-        let board = Board::new();
-
-        let fake_reader = MockReader { str_in_stdin: ~"0" };
+    fn create_human_with_input(input: ~str) -> Player {
+        let fake_reader = MockReader { str_in_stdin: input };
         let fake_input = ConsoleInput { reader: fake_reader };
-        let fake_player1 = Human { input: fake_input.clone() };
-        let fake_player2 = Human { input: fake_input.clone() };
 
+        Human { input: fake_input.clone() }
+    }
+
+    fn create_fake_output() -> ConsoleOutput {
         let fake_writer = @MockWriter { printed_str: ~"" };
-        let fake_output = ConsoleOutput { writer: fake_writer };
+        ConsoleOutput { writer: fake_writer }
+    }
+
+    #[test]
+    fn can_play_single_turns() {
+        let board = Board::new();
+        let fake_player1 = create_human_with_input(~"0");
+        let fake_player2 = create_human_with_input(~"1");
+        let fake_output = create_fake_output();
 
         let mut game = Game::new(fake_output, board, fake_player1, fake_player2);
 
         game.board = game.next_turn();
-
         assert_eq!('x', game.board.spaces[0]);
+        assert_eq!(' ', game.board.spaces[1]);
+
+        game.board = game.next_turn();
+        assert_eq!('o', game.board.spaces[1]);
     }
 }
 

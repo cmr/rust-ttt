@@ -72,6 +72,17 @@ impl ConsoleOutput {
         // only works on vt100 terminal emulators
         self.writer.println(~"\x1b[2J\x1b[H");
     }
+
+    pub fn print_menu(&self) -> @ConsoleWriter {
+        let menu_str = ~"Please select the game type:\n\n" +
+                        " 1) Human vs. Human\n" +
+                        " 2) Human vs. Computer\n" +
+                        " 3) Computer vs. Human\n" +
+                        " 4) Computer vs. Computer\n" +
+                        " 5) Quit\n\n";
+
+        self.writer.println(menu_str)
+    }
 }
 
 #[cfg(test)]
@@ -133,6 +144,23 @@ mod test__output {
                                      "   |   |   \n" +
                                      "---+---+---\n" +
                                      "   |   | x "));
+    }
+
+    #[test]
+    fn can_print_the_menu() {
+        let mut output = output_with_fake_writer();
+
+        output.writer = output.print_menu();
+        let printed_str = output.writer.get_printed_str();
+
+        println("\n\n\nprinted:\n\nvvvvv\n" + printed_str + "^^^^^\n\n");
+
+        assert!(printed_str.contains("Please select the game type:\n\n" +
+                                     " 1) Human vs. Human\n" +
+                                     " 2) Human vs. Computer\n" +
+                                     " 3) Computer vs. Human\n" +
+                                     " 4) Computer vs. Computer\n" +
+                                     " 5) Quit\n\n"));
     }
 }
 
