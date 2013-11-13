@@ -1,7 +1,9 @@
+use ai::*;
 use board::*;
 use console_output::*;
 use player::*;
 
+mod ai;
 mod board;
 mod console_input;
 mod console_output;
@@ -28,14 +30,16 @@ impl Game {
 
     pub fn next_turn(&self) -> Board {
         self.output.clear_screen();
+        let spaces = self.board.spaces.clone();
+
         self.output.print_board(self.board.clone());
 
-        let mut new_board = Board::new_from_spaces(self.board.spaces.clone());
+        let mut new_board = Board::new_from_spaces(spaces.clone());
 
         let move = if self.board.current_token() == 'x' {
-            self.player1.get_move()
+            self.player1.get_move(spaces.clone())
         } else {
-            self.player2.get_move()
+            self.player2.get_move(spaces.clone())
         };
 
         match move {
@@ -61,7 +65,7 @@ mod test__game {
         let fake_reader = MockReader { str_in_stdin: input };
         let fake_input = ConsoleInput { reader: fake_reader };
 
-        Human { input: fake_input.clone() }
+        HumanPlayer { input: fake_input.clone() }
     }
 
     fn create_fake_output() -> ConsoleOutput {

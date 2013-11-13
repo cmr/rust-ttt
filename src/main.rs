@@ -1,4 +1,5 @@
 use std::io;
+use ai::*;
 use board::*;
 use console_input::*;
 use console_output::*;
@@ -8,6 +9,7 @@ use game::*;
 use menu::*;
 use player::*;
 
+mod ai;
 mod board;
 mod console_input;
 mod console_output;
@@ -62,17 +64,23 @@ fn setup_players(menu: Menu, input: ConsoleInput, output: ConsoleOutput) -> (Pla
 }
 
 fn match_choice(choice: int, input: ConsoleInput) -> (Player, Player) {
+    let ai = AI::new(LowestAvailable);
+
     match choice {
-        1 => (Human { input: input.clone() },
-              Human { input: input.clone() }),
-        2 => (Human { input: input.clone() },
-              Human { input: input.clone() }),
-        3 => (Human { input: input.clone() },
-              Human { input: input.clone() }),
-        4 => (Human { input: input.clone() },
-              Human { input: input.clone() }),
-        _ => (Human { input: input.clone() },
-              Human { input: input.clone() })
+        1 => (HumanPlayer { input: input.clone() },
+              HumanPlayer { input: input.clone() }),
+
+        2 => (HumanPlayer { input: input.clone() },
+              ComputerPlayer { ai: ai.clone() }),
+
+        3 => (ComputerPlayer { ai: ai.clone() },
+              HumanPlayer { input: input.clone() }),
+
+        4 => (ComputerPlayer { ai: ai.clone() },
+              ComputerPlayer { ai: ai.clone() }),
+
+        _ => (HumanPlayer { input: input.clone() },
+              HumanPlayer { input: input.clone() })
     }
 }
 

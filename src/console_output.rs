@@ -153,8 +153,6 @@ mod test__output {
         output.writer = output.print_menu();
         let printed_str = output.writer.get_printed_str();
 
-        println("\n\n\nprinted:\n\nvvvvv\n" + printed_str + "^^^^^\n\n");
-
         assert!(printed_str.contains("Please select the game type:\n\n" +
                                      " 1) Human vs. Human\n" +
                                      " 2) Human vs. Computer\n" +

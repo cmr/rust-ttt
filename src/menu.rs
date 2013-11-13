@@ -7,13 +7,6 @@ condition! {
     pub quit_choice: ~str -> int;
 }
 
-pub enum GameType {
-    HumanVsHuman = 1,
-    HumanVsComputer,
-    ComputerVsHuman,
-    ComputerVsComputer
-}
-
 pub struct Menu {
     input: ConsoleInput
 }

@@ -1,26 +1,36 @@
+use ai::*;
 use console_input::*;
 
+mod ai;
+mod board;
 mod console_input;
 mod console_reader;
 
 pub enum Player {
-    Human { input: ConsoleInput }
+    HumanPlayer { input: ConsoleInput },
+    ComputerPlayer { ai: AI }
 }
 
 impl Player {
-    pub fn new(input: ConsoleInput) -> Player {
-        Human { input: input }
+    pub fn new_human(input: ConsoleInput) -> Player {
+        HumanPlayer { input: input }
     }
 
-    pub fn get_move(&self) -> Option<int> {
+    pub fn new_computer(ai: AI) -> Player {
+        ComputerPlayer { ai: ai }
+    }
+
+    pub fn get_move(&self, spaces: ~[char]) -> Option<int> {
         match *self {
-            Human { input: ref input } => input.get_int()
+            HumanPlayer { input: ref input } => input.get_int(),
+            ComputerPlayer { ai: ref ai }    => ai.get_move(spaces)
         }
     }
 
     pub fn clone(&self) -> Player {
         match *self {
-            Human { input: ref input } => Human { input: input.clone() }
+            HumanPlayer { input: ref input } => HumanPlayer { input: input.clone() },
+            ComputerPlayer { ai: ref ai }    => ComputerPlayer { ai: ai.clone() }
         }
     }
 }
@@ -28,22 +38,34 @@ impl Player {
 #[cfg(test)]
 mod test__player {
     use super::*;
+    use ai::*;
+    use board::*;
     use console_input::*;
     use console_reader::*;
 
-    fn create_player_with_mock_input(fake_input: ~str) -> Player {
+    fn create_human_player_with_mock_input(fake_input: ~str) -> Player {
         let mock_reader = MockReader { str_in_stdin: fake_input };
         let mock_input = ConsoleInput { reader: mock_reader };
-        Player::new(mock_input)
+        Player::new_human(mock_input)
     }
 
     #[test]
     fn human_player_gets_move_from_console_input() {
-        let player = create_player_with_mock_input(~"5\n");
-        let player_with_invalid_input = create_player_with_mock_input(~"claws");
+        let player = create_human_player_with_mock_input(~"5\n");
+        let player_with_invalid_input = create_human_player_with_mock_input(~"claws");
+        let board = Board::new();
 
-        assert_eq!(Some(5), player.get_move());
-        assert_eq!(None, player_with_invalid_input.get_move());
+        assert_eq!(Some(5), player.get_move(board.spaces.clone()));
+        assert_eq!(None, player_with_invalid_input.get_move(board.spaces.clone()));
+    }
+
+    #[test]
+    fn computer_player_gets_move_from_minimax() {
+        let minimax = AI::new(LowestAvailable);
+        let player = Player::new_computer(minimax);
+        let board = Board::new();
+
+        assert_eq!(Some(0), player.get_move(board.spaces.clone()));
     }
 }
 
