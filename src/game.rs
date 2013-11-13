@@ -1,34 +1,48 @@
-use console_io::*;
 use board::*;
+use console_input::*;
+use console_output::*;
+use console_reader::*;
+use console_writer::*;
+use player::*;
 
 mod board;
-mod mock_io;
-mod console_io;
+mod console_input;
+mod console_output;
+mod console_reader;
+mod console_writer;
+mod player;
 
-#[deriving(Clone)]
 struct Game {
-    io: ConsoleIO,
-    board: Board
+    output: ConsoleOutput,
+    board: Board,
+    player1: Player,
+    player2: Player
 }
 
 impl Game {
-    pub fn new(io: ConsoleIO, board: Board) -> Game {
-        Game { io: io,
-               board: board }
+    pub fn new(output: ConsoleOutput, board: Board, player1: Player, player2: Player) -> Game {
+
+        Game { output: output,
+               board: board,
+               player1: player1,
+               player2: player2
+        }
     }
 
-    pub fn next_turn(&self) -> Game {
+    pub fn next_turn(&self) -> Board {
+        self.output.clear_screen();
+        self.output.print_board(self.board.clone());
+
         let mut new_board = Board::new_from_spaces(self.board.spaces.clone());
 
-        let move = self.io.get_move();
+        let move = self.player1.get_move();
 
         match move {
             Some(index) => new_board = self.board.try_move(index),
             None        => ()
         }
 
-        Game { io: self.io.clone(),
-               board: new_board }
+        new_board
     }
 }
 
@@ -36,20 +50,27 @@ impl Game {
 mod test__game {
     use super::*;
     use board::*;
-    use mock_io::*;
-    use console_io::*;
+    use player::*;
+    use console_reader::*;
+    use console_writer::*;
+    use console_input::*;
+    use console_output::*;
 
     #[test]
     fn can_play_a_single_turn() {
-        let mut board = Board::new();
+        let board = Board::new();
 
         let fake_reader = MockReader { str_in_stdin: ~"0" };
+        let fake_input = ConsoleInput { reader: fake_reader };
+        let fake_player1 = Human { input: fake_input.clone() };
+        let fake_player2 = Human { input: fake_input.clone() };
 
-        let mock_io = ConsoleIO::new(fake_reader);
-        let mut game = Game::new(mock_io, board);
+        let fake_writer = @MockWriter { printed_str: ~"" };
+        let fake_output = ConsoleOutput { writer: fake_writer };
 
-        game = game.next_turn();
+        let mut game = Game::new(fake_output, board, fake_player1, fake_player2);
 
+        game.board = game.next_turn();
 
         assert_eq!('x', game.board.spaces[0]);
     }

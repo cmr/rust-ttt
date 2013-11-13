@@ -1,10 +1,10 @@
 
-pub enum IReader {
+pub enum ConsoleReader {
     MockReader { str_in_stdin: ~str },
     RealReader(@Reader)
 }
 
-impl IReader {
+impl ConsoleReader {
     pub fn read_line(&self) -> ~str {
         match *self {
             MockReader { str_in_stdin: ref fake_input } =>
@@ -21,7 +21,7 @@ impl IReader {
         v[0].to_owned()
     }
 
-    pub fn clone(&self) -> IReader {
+    pub fn clone(&self) -> ConsoleReader {
         match *self {
             MockReader { str_in_stdin: ref fake_input } =>
                 MockReader { str_in_stdin: fake_input.clone() },
