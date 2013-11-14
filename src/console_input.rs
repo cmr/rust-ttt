@@ -36,7 +36,7 @@ mod test__input {
     }
 
     #[test]
-    fn gets_an_integer_from_the_user() {
+    fn gets_an_integer_from_its_reader() {
         let io = create_io_with_mocks(~"  1  \n");
         let io_with_invalid_input = create_io_with_mocks(~"wazzup\n");
 

@@ -89,7 +89,7 @@ impl AI {
 
     pub fn score_finished_board(&self, board: Board, depth: int) -> int {
         match board.winner() {
-            Some(winner) => 9 - depth,
+            Some(*) => 9 - depth,
             None         => 0
         }
     }
@@ -124,9 +124,22 @@ mod test__minimax {
     use super::*;
     use board::*;
 
+    fn setup_ai() -> (AI, Board) {
+        let ai = AI::new(Minimax);
+        let example_board = Board::new_from_spaces(~['o','x','o',
+                                                     'o','x','x',
+                                                     ' ',' ',' ' ]);
+
+        (
+            ai,
+            example_board,
+        )
+    }
+
     #[test]
     fn can_score_a_finished_board() {
         let ai = AI::new(Minimax);
+
         let tie_board = Board::new_from_spaces(~['o','x','o',
                                                  'o','x','x',
                                                  'x','o','x' ]);
@@ -139,10 +152,6 @@ mod test__minimax {
                                                     'x','o','o',
                                                     'x',' ','o' ]);
 
-        let board = Board::new_from_spaces(~['o','x','o',
-                                             ' ',' ','x',
-                                             ' ',' ',' ' ]);
-
         let tie_board_score = ai.assign_score_to_board(tie_board, 0);
         let x_wins_score = ai.assign_score_to_board(x_wins_board, 0);
         let o_wins_score = ai.assign_score_to_board(o_wins_board, 0);
@@ -154,10 +163,7 @@ mod test__minimax {
 
     #[test]
     fn can_score_an_almost_finished_board() {
-        let ai = AI::new(Minimax);
-        let board = Board::new_from_spaces(~['o','x','o',
-                                             'o','x','x',
-                                             ' ',' ',' ' ]);
+        let (ai, board) = setup_ai();
 
         ai.get_all_scores(board.clone(), 0);
 
@@ -166,15 +172,14 @@ mod test__minimax {
         assert!(score < 0);
     }
 
-//    #[test]
-//    fn scores_unavailable_spaces_as_None() {
-//        let ai = AI::new(Minimax);
-//        let board = Board::new_from_spaces(~['o','x','o',
-//                                             'o','x','x',
-//                                             ' ',' ',' ' ]);
-//
-//        assert_eq!(None, ai.score_move(0, board.clone()));
-//    }
+    #[test]
+    fn scores_unavailable_spaces_as_None() {
+        let (ai, board) = setup_ai();
+
+        let scores = ai.get_all_scores(board.clone(), 0);
+
+        assert_eq!(None, scores[0]);
+    }
 
     #[test]
     fn scores_tying_moves_as_0() {
@@ -235,5 +240,25 @@ mod test__minimax {
         let scores = ai.get_all_scores(board, 0);
 
         assert_eq!(6, ai.index_of_best_score(scores));
+    }
+
+    #[test]
+    fn can_run_the_whole_algorithm() {
+        let ai = AI::new(Minimax);
+        let win_board = Board::new_from_spaces(~[' ','o','x',
+                                                 ' ','o','x',
+                                                 ' ',' ',' ' ]);
+
+        let block_board = Board::new_from_spaces(~[' ','o','x',
+                                                   ' ','o','x',
+                                                   ' ','x',' ' ]);
+
+        let setup_fork_board = Board::new_from_spaces(~['x',' ',' ',
+                                                        'o','x',' ',
+                                                        ' ',' ','o' ]);
+
+        assert_eq!(Some(8), ai.minimax(win_board));
+        assert_eq!(Some(8), ai.minimax(block_board));
+        assert_eq!(Some(1), ai.minimax(setup_fork_board));
     }
 }

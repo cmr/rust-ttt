@@ -55,10 +55,10 @@ mod test__player {
         let player = create_human_player_with_mock_input(~"5\n");
         let player_with_invalid_input = create_human_player_with_mock_input(~"claws");
 
-        let spaces = Board::new().spaces;
+        let board = Board::new();
 
-        assert_eq!(Some(5), player.get_move(spaces.clone()));
-        assert_eq!(None, player_with_invalid_input.get_move(spaces.clone()));
+        assert_eq!(Some(5), player.get_move(board.clone()));
+        assert_eq!(None, player_with_invalid_input.get_move(board.clone()));
     }
 
     #[test]
@@ -67,7 +67,7 @@ mod test__player {
         let player = Player::new_computer(dumb_ai);
         let board = Board::new();
 
-        assert_eq!(Some(0), player.get_move(board.spaces.clone()));
+        assert_eq!(Some(0), player.get_move(board.clone()));
     }
 }
 

@@ -43,6 +43,7 @@ impl Board {
     }
 
     fn get_error_message(&self, index: int) -> Option<~str> {
+        //println("get_error_message in board.  index = " + index.to_str() + "\n");
         match index {
             0..8 => self.check_against_available_moves(index),
             _    => Some(~"Please choose a number from 0 to 8.")

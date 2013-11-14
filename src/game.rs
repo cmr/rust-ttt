@@ -1,9 +1,7 @@
-use ai::*;
 use board::*;
 use console_output::*;
 use player::*;
 
-mod ai;
 mod board;
 mod console_input;
 mod console_output;

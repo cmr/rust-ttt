@@ -1,5 +1,6 @@
 use std::str;
 use std::vec::*;
+
 use board::*;
 use console_writer::*;
 
