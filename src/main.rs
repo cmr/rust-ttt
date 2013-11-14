@@ -64,7 +64,7 @@ fn setup_players(menu: Menu, input: ConsoleInput, output: ConsoleOutput) -> (Pla
 }
 
 fn match_choice(choice: int, input: ConsoleInput) -> (Player, Player) {
-    let ai = AI::new(LowestAvailable);
+    let ai = AI::new(Minimax);
 
     match choice {
         1 => (HumanPlayer { input: input.clone() },

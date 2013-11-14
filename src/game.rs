@@ -37,9 +37,9 @@ impl Game {
         let mut new_board = Board::new_from_spaces(spaces.clone());
 
         let move = if self.board.current_token() == 'x' {
-            self.player1.get_move(spaces.clone())
+            self.player1.get_move(new_board.clone())
         } else {
-            self.player2.get_move(spaces.clone())
+            self.player2.get_move(new_board.clone())
         };
 
         match move {

@@ -1,4 +1,5 @@
 use ai::*;
+use board::*;
 use console_input::*;
 
 mod ai;
@@ -20,10 +21,10 @@ impl Player {
         ComputerPlayer { ai: ai }
     }
 
-    pub fn get_move(&self, spaces: ~[char]) -> Option<int> {
+    pub fn get_move(&self, board: Board) -> Option<int> {
         match *self {
             HumanPlayer { input: ref input } => input.get_int(),
-            ComputerPlayer { ai: ref ai }    => ai.get_move(spaces)
+            ComputerPlayer { ai: ref ai }    => ai.get_move(board)
         }
     }
 
