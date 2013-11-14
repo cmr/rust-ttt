@@ -1,8 +1,6 @@
 use std::vec::*;
 use board::*;
 
-mod board;
-
 #[deriving(Clone)]
 pub enum Strategy {
     Minimax,
@@ -120,7 +118,7 @@ impl AI {
 }
 
 #[cfg(test)]
-mod test__minimax {
+mod test {
     use super::*;
     use board::*;
 

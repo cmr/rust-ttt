@@ -1,8 +1,5 @@
 use console_input::*;
 
-mod console_input;
-mod console_reader;
-
 condition! {
     pub quit_choice: ~str -> int;
 }
@@ -35,7 +32,7 @@ impl Menu {
 }
 
 #[cfg(test)]
-mod test__menu {
+mod test {
     use super::*;
     use console_input::*;
     use console_reader::*;

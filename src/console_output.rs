@@ -4,9 +4,6 @@ use std::vec::*;
 use board::*;
 use console_writer::*;
 
-mod board;
-mod console_writer;
-
 struct ConsoleOutput {
     writer: @ConsoleWriter
 }
@@ -87,7 +84,7 @@ impl ConsoleOutput {
 }
 
 #[cfg(test)]
-mod test__output {
+mod test {
     use super::*;
     use board::*;
     use console_writer::*;

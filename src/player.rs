@@ -2,11 +2,6 @@ use ai::*;
 use board::*;
 use console_input::*;
 
-mod ai;
-mod board;
-mod console_input;
-mod console_reader;
-
 pub enum Player {
     HumanPlayer { input: ConsoleInput },
     ComputerPlayer { ai: AI }
@@ -37,7 +32,7 @@ impl Player {
 }
 
 #[cfg(test)]
-mod test__player {
+mod test {
     use super::*;
     use ai::*;
     use board::*;

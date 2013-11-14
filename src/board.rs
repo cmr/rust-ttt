@@ -211,7 +211,7 @@ impl Board {
 }
 
 #[cfg(test)]
-mod test__board {
+mod test {
     use super::*;
 
     #[test]

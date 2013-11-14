@@ -1,8 +1,6 @@
-use std::vec::*;
 use std::io::*;
 
 use console_reader::*;
-mod console_reader;
 
 struct ConsoleInput {
     reader: ConsoleReader
@@ -26,7 +24,7 @@ impl ConsoleInput {
 }
 
 #[cfg(test)]
-mod test__input {
+mod test {
     use super::*;
     use console_reader::*;
 

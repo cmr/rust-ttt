@@ -2,13 +2,6 @@ use board::*;
 use console_output::*;
 use player::*;
 
-mod board;
-mod console_input;
-mod console_output;
-mod console_reader;
-mod console_writer;
-mod player;
-
 struct Game {
     output: ConsoleOutput,
     board: Board,
@@ -50,7 +43,7 @@ impl Game {
 }
 
 #[cfg(test)]
-mod test__game {
+mod test {
     use super::*;
     use board::*;
     use player::*;
